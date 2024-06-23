@@ -6,29 +6,40 @@ import requests
 #Import beautiful soup library for parsing html content
 from bs4 import BeautifulSoup
 
-#The "tables_to_scrape" list contains all of the relevant tables for data scraping
-tables_to_scrape = [
-    "Standard Stats",
-    "Scores & Fixtures",
-    "Goalkeeping",
-    "Advanced Goalkeeping",
-    "Shooting",
-    "Passing",
-    "Pass Types",
-    "Goal and Shot Creation",
-    "Defensive Actions",
-    "Possession",
-    "Playing Time",
-    "Miscellaneous Stats"
-]
+#The "tables_to_scrape" dictionary contains all of the relevant tables for data scraping and which stats from those tables are of interest
+tables_to_scrape = {
+    "Goalkeeping":[],
+    "Advanced Goalkeeping":[],
+    "Shooting":[],
+    "Passing":['Passes Completed', 'Passes Attempted (Short)', 'Pass Completion % (Short)', 'Passes Completed (Medium)', 'Pass Completion % (Medium)', 'Passes Completed (Long)'],
+    "Pass Types":[],
+    "Goal and Shot Creation":[],
+    "Defensive Actions":[],
+    "Possession":[],
+    "Playing Time":[],
+    "Miscellaneous Stats":[],
+}
+
+#The "get_all_aria_labels" function simply returns a list of all the stats present in a data table (for development purposes)
+def get_all_aria_labels(headers_row) :
+
+    #Return a list of each aria-label for each header in the row of headers
+    return [header["aria-label"] for header in headers_row.find_all("th")]
 
 #The "scrape_row" function scrapes all the content from a row
-def scrape_row(row) :
+def scrape_row(row, header_indexes) :
 
     #The "player_name" string is the name of the player in this row
     player_name = row.find("th").text
-    
-    print(player_name)
+
+    #Return the player name, and a list of each data point that is of interest based on the "header_indexes" list, which is derived from the "tables_to_scrape" dictionary
+    return player_name, [data_point.text for data_point_index, data_point in enumerate(row.find_all("td")) if data_point_index in header_indexes]
+
+#The "scrape_headers_row" function returns a list of indexes of data points that are desired from a table
+def scrape_headers_row(headers_row, desired_data_points) :
+
+    #Return the list of indexes such that the aria-label of the header for this column is in the "desired_data_points" list
+    return [header_index for header_index, header in enumerate(headers_row.find_all("th")[1:]) if header["aria-label"] in desired_data_points]
 
 #The "scrape_table" function scrapes all the content from a table
 def scrape_table(table, season) :
@@ -42,13 +53,23 @@ def scrape_table(table, season) :
     
     print(caption)
 
-    #Loop through each row in the table 
-    for row in table.find_all("tr") :
+    #The "all_rows" list is the list of row bs4 classes from this table
+    all_rows = table.find_all("tr")
 
-        #Call the "scrape_row" function to scrape the content of this row
-        scrape_row(row)
+    #The "headers_row" class is the second row of the table, which contains all the names of each data point present in this table
+    headers_row = all_rows[1]
+
+    #The "header_indexes" list is the list of indexes for each desired data point
+    header_indexes = scrape_headers_row(headers_row, tables_to_scrape[caption])
+
+    print(tables_to_scrape[caption])
+
+    #Loop through each row in the table (besides the first two rows, which are header rows)
+    for row in all_rows[2:] :
         
-    quit()
+        #Call the "scrape_row" function to scrape the content of this row
+        print(scrape_row(row, header_indexes))
+        
     
 #The "scrape" function scrapes all the content from a team page
 def scrape(url) :
