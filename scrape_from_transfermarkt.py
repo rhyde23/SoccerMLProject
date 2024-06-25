@@ -6,33 +6,25 @@ import requests
 #Import beautiful soup library for parsing html content
 from bs4 import BeautifulSoup
 
-#The "get_transfermarkt_player_url" function scrapes the url of the top search result for a player name query
-def get_transfermarkt_player_url(player_name) :
-
-    #The "query_link" string formats the search for the player's url by using the "player_name" string and replacing spaces with plus signs
-    query_link = "https://www.transfermarkt.com/schnellsuche/ergebnis/schnellsuche?query="+player_name.replace(" ", "+")
+#The "scrape_from_transfermakt_page" function scrapes the name, position, and market value of each player present on the page
+def scrape_from_transfermakt_page(url) :
 
     #The "request" object is the html content from the given query link
-
     headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36 Edg/126.0.0.0'}
-    request = requests.get(query_link, headers=headers)
+
+    request = requests.get(url, headers=headers)
 
     #The "soup" object is the beautiful soup object that we will find the player's url from 
     soup = BeautifulSoup(request.content, "html.parser")
 
-    #print(soup)
+    tbody = soup.find("div", {"class": 'responsive-table'})
     
-    for row in soup.find_all("tr")) :
-        print(row)
-    return "https://www.transfermarkt.com"+soup.find("tr").find("a")["href"]
+    for row in tbody.find_all("tr")[1:] :
+        player_info = [td.text.replace("\n", "").replace("\xa0", "").strip() for td in row.find_all("td")][3:]
+        if player_info != [] :
+            name, position, price = player_info[0], player_info[1], player_info[-1]
+            print(name, position, price)
+    return None
 
-#The "scrape_from_transfermakt" function scrapes position and Market Value from Transfermarkt
-def scrape_from_transfermakt(url) :
+print(scrape_from_transfermakt_page("https://www.transfermarkt.com/luton-town/kader/verein/1031/saison_id/2023"))
 
-    #The "request" object is the html content from the given url
-    request = requests.get(url)
-
-    #The "soup" object is the beautiful soup object we will call .find() and .find_all() for certain tags and extract their text
-    soup = BeautifulSoup(request.content, "html.parser")
-
-print(get_transfermarkt_player_url("Mateo Kovačić"))
