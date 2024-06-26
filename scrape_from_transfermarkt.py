@@ -6,6 +6,9 @@ import requests
 #Import beautiful soup library for parsing html content
 from bs4 import BeautifulSoup
 
+#Import unidecode for removing accents from letters in strings
+from unidecode import unidecode
+
 #The "scrape_from_transfermakt_page" function scrapes the name, position, and market value of each player present on the page
 def scrape_from_transfermakt_page(url) :
 
@@ -18,13 +21,16 @@ def scrape_from_transfermakt_page(url) :
     soup = BeautifulSoup(request.content, "html.parser")
 
     tbody = soup.find("div", {"class": 'responsive-table'})
+
+    transfermarkt_stats = {}
     
     for row in tbody.find_all("tr")[1:] :
         player_info = [td.text.replace("\n", "").replace("\xa0", "").strip() for td in row.find_all("td")][3:]
         if player_info != [] :
-            name, position, price = player_info[0], player_info[1], player_info[-1]
-            print(name, position, price)
-    return None
+            name, position, price = unidecode(player_info[0]), player_info[1], player_info[-1]
+            transfermarkt_stats[name] = [position, price]
 
-print(scrape_from_transfermakt_page("https://www.transfermarkt.com/luton-town/kader/verein/1031/saison_id/2023"))
+    return transfermarkt_stats
+
+#scrape_from_transfermakt_page("https://www.transfermarkt.com/manchester-city/kader/verein/281/saison_id/2023"))
 

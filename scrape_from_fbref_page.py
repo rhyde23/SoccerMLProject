@@ -3,6 +3,9 @@
 #Import requests library for requests for html content of websites 
 import requests
 
+#Import unidecode for removing accents from letters in strings
+from unidecode import unidecode
+
 #Import beautiful soup library for parsing html content
 from bs4 import BeautifulSoup
 
@@ -44,8 +47,8 @@ def convert_to_float_or_none(x) :
 #The "scrape_row" function scrapes all the content from a row
 def scrape_row(row, header_indexes) :
 
-    #The "player_name" string is the name of the player in this row
-    player_name = row.find("th").text
+    #The "player_name" string is the name of the player in this row, with accents removed.
+    player_name = unidecode(row.find("th").text)
 
     #Return the player name, and a list of each data point that is of interest based on the "header_indexes" list, which is derived from the "tables_to_scrape" dictionary
     return player_name, [convert_to_float_or_none(data_point.text) for data_point_index, data_point in enumerate(row.find_all("td")) if data_point_index in header_indexes]
@@ -171,12 +174,7 @@ def scrape(url) :
     #Call "remove_totals" for "goalkeepers"
     remove_totals(goalkeepers)
 
-    for key in players :
-        print(key, players[key])
-    print()
-
-    for key in goalkeepers :
-        print(key, goalkeepers[key])
+    return players, goalkeepers
 
 
 scrape("https://fbref.com/en/squads/b8fd03ef/Manchester-City-Stats") 
