@@ -174,6 +174,7 @@ def scrape(url) :
     #Call "remove_totals" for "goalkeepers"
     remove_totals(goalkeepers)
 
+    #Return the "players" and "goalkeepers" dictionariess.
     return players, goalkeepers
 
 
