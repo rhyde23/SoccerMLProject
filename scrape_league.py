@@ -23,9 +23,13 @@ def scrape_team(fbref_team_link, transfermarkt_team_link) :
     for fbref_key in fbref_stats :
 
         #Get the corresponding transfermarkt stats for this player name
-        transfermarkt = transfermarkt_stats[fbref_key]
 
-        print(transfermarkt)
+        try :
+            transfermarkt = transfermarkt_stats[fbref_key]
+            print(transfermarkt, fbref_key)
+        except :
+            print(fbref_key, "not found")
+            pass
 
 #The "get_fbref_team_links" function gets all the links to team pages from an FBRef league page.
 def get_fbref_team_links(fbref_link) :
@@ -40,7 +44,7 @@ def get_fbref_team_links(fbref_link) :
     return [td.find("a")["href"] for td in soup.find_all("td", {"data-stat": "team"})[:20]]
 
 #The "get_transfermarkt_team_links" function gets all the links to team pages from a Transfermarkt league page
-def get_transfermarkt_team_links(transfermarkt_link) :
+def get_transfermarkt_team_links(transfermarkt_link, season_year) :
 
     #The "request" object is the html content from the given transfermarkt link 
     request = requests.get(transfermarkt_link, headers=headers)
@@ -58,21 +62,28 @@ def get_transfermarkt_team_links(transfermarkt_link) :
         link = a["href"]
 
         #Filter out weird instances and make sure the link isn't already in the list (some repeats)
-        if link != "#" and not link in links :
+        if link != "#" :
 
-            #Add the link to the list
-            links.append(link)
+            link_slash_splitted = link.split("/")
+
+            link = "/".join(link_slash_splitted[:-5]+["kader", "verein", link_slash_splitted[-3], "plus", "0", "galerie", "0?saison_id="+season_year.split("-")[0]])
+            
+            if not link in links :
+                links.append(link)
 
     #Return the "links" list with the last item stripped off because it a link to another part of the league page.
     return links[:-1]
 
 #The "scrape_league" function is the main function for this script, will iterate through each matching of fbref team link and transfermarkt team link and call "scrape_team"
-def scrape_league(fbref_league_link, transfermarkt_league_link) :
-    for matching_link in zip(get_fbref_team_links(fbref_league_link), get_transfermarkt_team_links(transfermarkt_league_link)) :
+def scrape_league(fbref_league_link, transfermarkt_league_link, season_year) :
+    splitted_by_slashes = fbref_league_link.split("/")
+    fbref_league_link = "/".join(splitted_by_slashes[:-1]+[season_year, season_year+"-"+splitted_by_slashes[-1]])
+    print(fbref_league_link)
+    print(get_fbref_team_links(fbref_league_link), get_transfermarkt_team_links(transfermarkt_league_link+"/?saison_id="+season_year.split("-")[0], season_year))
+    for matching_link in zip(get_fbref_team_links(fbref_league_link), get_transfermarkt_team_links(transfermarkt_league_link+"/?saison_id="+season_year.split("-")[0], season_year)) :
         print(matching_link)
+        print()
+        scrape_team("https://fbref.com"+matching_link[0], "https://www.transfermarkt.com"+matching_link[1])
+        print()
     
-
-scrape_league("https://fbref.com/en/comps/10/Championship-Stats", "https://www.transfermarkt.com/championship/startseite/wettbewerb/GB2")
-#scrape_team("https://fbref.com/en/squads/b8fd03ef/Manchester-City-Stats", "https://www.transfermarkt.com/manchester-city/kader/verein/281/saison_id/2023")
-
-#https://fbref.com/en/squads/47c64c55/Crystal-Palace-Stats
+scrape_league("https://fbref.com/en/comps/9/Premier-League-Stats", "https://www.transfermarkt.com/premier-league/startseite/wettbewerb/GB1", "2023-2024")

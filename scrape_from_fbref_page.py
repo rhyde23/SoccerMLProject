@@ -28,9 +28,6 @@ tables_to_scrape = {
 #The "ninetys_played_minimum" float is the minimum amount of 90s played for a player to be included in the dataset
 ninetys_played_minimum = 5
 
-#The "goalkeepers" and the "players" dictionaries will contain all the stats for each goalkeeper and non-goalkeeper, respectively
-goalkeepers, players = {}, {}
-
 #The "get_all_aria_labels" function simply returns a list of all the stats present in a data table (for development purposes)
 def get_all_aria_labels(headers_row) :
 
@@ -60,7 +57,7 @@ def scrape_headers_row(headers_row, desired_data_points) :
     return [header_index for header_index, header in enumerate(headers_row.find_all("th")[1:]) if header["aria-label"] in desired_data_points]
 
 #The "scrape_table" function scrapes all the content from a table
-def scrape_table(table, season) :
+def scrape_table(table, season, players, goalkeepers) :
 
     #The "caption" string is the caption of the table
     caption = table.find("caption").text.split(season)[0][:-1]
@@ -101,7 +98,7 @@ def scrape_table(table, season) :
 
             #Call the "scrape_row" function to scrape the content of this row
             player_name, row_data = scrape_row(row, header_indexes)
-
+        
         #If the table's caption pertains to goalkeepers 
         if goalkeeper :
 
@@ -153,6 +150,9 @@ def remove_totals(stats) :
 #The "scrape" function scrapes all the content from a team page
 def scrape(url) :
 
+    #The "goalkeepers" and the "players" dictionaries will contain all the stats for each goalkeeper and non-goalkeeper, respectively
+    goalkeepers, players = {}, {}
+
     #The "request" object is the html content from the given url
     request = requests.get(url)
 
@@ -166,7 +166,7 @@ def scrape(url) :
     for table in soup.find_all("table") :
 
         #Call the "scrape_table" function to scrape the content of this table
-        scrape_table(table, season)
+        scrape_table(table, season, players, goalkeepers)
 
     #Call "remove_totals" for "players"
     remove_totals(players)
@@ -174,8 +174,5 @@ def scrape(url) :
     #Call "remove_totals" for "goalkeepers"
     remove_totals(goalkeepers)
 
-    #Return the "players" and "goalkeepers" dictionariess.
+    #Return the "players" and "goalkeepers" dictionaries.
     return players, goalkeepers
-
-
-scrape("https://fbref.com/en/squads/b8fd03ef/Manchester-City-Stats") 
