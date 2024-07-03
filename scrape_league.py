@@ -1,6 +1,9 @@
 #Scrape League
 import scrape_from_fbref_page, scrape_from_transfermarkt
 
+#Import time library for the .sleep() function to avoid 429 request error
+import time
+
 #Import requests library for requests for html content of websites 
 import requests
 
@@ -40,6 +43,8 @@ def get_fbref_team_links(fbref_link) :
     #The "soup" object is the beautiful soup object that we will find the player's url from 
     soup = BeautifulSoup(request.content, "html.parser")
 
+    print(soup.find("h1"))
+
     #Return the list of links from td columns if the "data-stat" tag for the td is "team"
     return [td.find("a")["href"] for td in soup.find_all("td", {"data-stat": "team"})[:20]]
 
@@ -76,14 +81,18 @@ def get_transfermarkt_team_links(transfermarkt_link, season_year) :
 
 #The "scrape_league" function is the main function for this script, will iterate through each matching of fbref team link and transfermarkt team link and call "scrape_team"
 def scrape_league(fbref_league_link, transfermarkt_league_link, season_year) :
+
+    #Split the Fbref League link by forward slash
     splitted_by_slashes = fbref_league_link.split("/")
+
+    #Build the new link based on the "season_year" string
     fbref_league_link = "/".join(splitted_by_slashes[:-1]+[season_year, season_year+"-"+splitted_by_slashes[-1]])
-    print(fbref_league_link)
-    print(get_fbref_team_links(fbref_league_link), get_transfermarkt_team_links(transfermarkt_league_link+"/?saison_id="+season_year.split("-")[0], season_year))
+
+    #Iterate through each match of Fbref team link and Transfermarkt team link
     for matching_link in zip(get_fbref_team_links(fbref_league_link), get_transfermarkt_team_links(transfermarkt_league_link+"/?saison_id="+season_year.split("-")[0], season_year)) :
-        print(matching_link)
-        print()
+        
+        #Call the "scrape_team" function with this matching team link pair
         scrape_team("https://fbref.com"+matching_link[0], "https://www.transfermarkt.com"+matching_link[1])
-        print()
-    
-scrape_league("https://fbref.com/en/comps/9/Premier-League-Stats", "https://www.transfermarkt.com/premier-league/startseite/wettbewerb/GB1", "2023-2024")
+
+        #Wait 5 seconds to avoid the 429 Request Timeout Error from FBRef
+        time.sleep(5)
