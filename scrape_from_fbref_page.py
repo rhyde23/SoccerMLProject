@@ -25,6 +25,30 @@ tables_to_scrape = {
     "Miscellaneous Stats":['% of Aerials Won'],
 }
 
+#The "convert_string_to_sql_column_name" function takes an FBRef column name and makes it SQL-friendly
+def convert_string_to_sql_column_name(name) :
+
+    #Get rid of unique characters and spaces, and make everything uppercase
+    return name.replace(" ", "_").replace("%", "PERCENT").replace("/", "_PER_").replace("Exp.", "EXPECTED").replace(":", "").replace("-", "_").replace("(", "").replace(")", "").upper()
+
+#The "get_database_column_names" function gets all of the column names for the Database from the "tables_to_scrape" dictionary that contains all the FBRef column names
+def get_database_column_names() :
+
+    #The "tables_in_order" list contains the keys of "tables_to_scrape" in the correct order
+    tables_in_order = ["Shooting", "Passing", "Goal and Shot Creation", "Defensive Actions", "Possession", "Miscellaneous Stats"]
+
+    #The "sql_names" list will be populated with all the converted names
+    sql_names = []
+
+    #Iterate through table name in "tables_in_order"
+    for table in tables_in_order :
+
+        #Add the converted names from this table to "sql_names"
+        sql_names = sql_names + [convert_string_to_sql_column_name(column_name) for column_name in tables_to_scrape[table]]
+
+    #Return "sql_names"
+    return sql_names
+
 #The "ninetys_played_minimum" float is the minimum amount of 90s played for a player to be included in the dataset
 ninetys_played_minimum = 5
 
