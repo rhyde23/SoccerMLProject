@@ -43,8 +43,6 @@ def get_fbref_team_links(fbref_link) :
     #The "soup" object is the beautiful soup object that we will find the player's url from 
     soup = BeautifulSoup(request.content, "html.parser")
 
-    print(soup.find("h1"))
-
     #Return the list of links from td columns if the "data-stat" tag for the td is "team"
     return [td.find("a")["href"] for td in soup.find_all("td", {"data-stat": "team"})[:20]]
 
@@ -96,3 +94,5 @@ def scrape_league(fbref_league_link, transfermarkt_league_link, season_year) :
 
         #Wait 5 seconds to avoid the 429 Request Timeout Error from FBRef
         time.sleep(5)
+
+scrape_league(fbref_league_link, transfermarkt_league_link, season_year)

@@ -40,6 +40,11 @@ def create_table(table_name) :
     #Use the CREATE query to create the table 
     cursor.execute(build_create_table_query(table_name))
 
+#The "enter_player_in_database" function enters a player within a league database table as a row in the table.
+def enter_player_in_database(table_name, player_name, player_position, player_mv, player_stats) :
+    pass
+
+
 #Commit changes
 database_connection.commit()
 
