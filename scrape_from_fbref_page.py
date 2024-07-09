@@ -37,8 +37,12 @@ def get_database_column_names() :
     #The "tables_in_order" list contains the keys of "tables_to_scrape" in the correct order
     tables_in_order = ["Shooting", "Passing", "Goal and Shot Creation", "Defensive Actions", "Possession", "Miscellaneous Stats"]
 
+    gk_tables_in_order = ["Goalkeeping", "Advanced Goalkeeping"]
+
     #The "sql_names" list will be populated with all the converted names
     sql_names = []
+
+    gk_sql_names = []
 
     #Iterate through table name in "tables_in_order"
     for table in tables_in_order :
@@ -46,8 +50,12 @@ def get_database_column_names() :
         #Add the converted names from this table to "sql_names"
         sql_names = sql_names + [convert_string_to_sql_column_name(column_name) for column_name in tables_to_scrape[table]]
 
+    for table in gk_tables_in_order :
+
+        gk_sql_names = gk_sql_names + [convert_string_to_sql_column_name(column_name) for column_name in goalkeeper_tables_to_scrape[table]]
+
     #Return "sql_names"
-    return sql_names
+    return sql_names, gk_sql_names
 
 #The "ninetys_played_minimum" float is the minimum amount of 90s played for a player to be included in the dataset
 ninetys_played_minimum = 5
@@ -123,39 +131,38 @@ def scrape_table(table, season, players, goalkeepers) :
             #Call the "scrape_row" function to scrape the content of this row
             player_name, row_data = scrape_row(row, header_indexes)
         
-        #If the table's caption pertains to goalkeepers 
-        if goalkeeper :
+            #If the table's caption pertains to goalkeepers 
+            if goalkeeper :
 
-            #If the player's name is not already a key in "goalkeepers" dict
-            if not player_name in goalkeepers :
+                #If the player's name is not already a key in "goalkeepers" dict
+                if not player_name in goalkeepers :
 
-                #Set the value for "player_name" in the "goalkeepers" dict as the "row_data" list
-                goalkeepers[player_name] = row_data
+                    #Set the value for "player_name" in the "goalkeepers" dict as the "row_data" list
+                    goalkeepers[player_name] = row_data
 
-            #If the player's name is already in the "goalkeepers" dict
-            else :
-
-                #Set the value for "player_name" in the "goalkeepers" dict as itself plus the "row_data" list 
-                goalkeepers[player_name] = goalkeepers[player_name]+row_data
-
-        #If the table's caption does not pertain to goalkeepers 
-        else :
-
-            #If the player's name is not already in goalkeepers (because goalkeepers appear in the Passing table, for example)
-            if not player_name in goalkeepers :
-
-                #If the player's name is not already a key in "players" dict
-                if not player_name in players :
-
-                    #Set the value for "player_name" in the "players" dict as the "row_data" list
-                    players[player_name] = row_data
-
-                #If the player's name is already in the "players" dict
+                #If the player's name is already in the "goalkeepers" dict
                 else :
 
-                    #Set the value for "player_name" in the "players" dict as itself plus the "row_data" list 
-                    players[player_name] = players[player_name]+row_data
+                    #Set the value for "player_name" in the "goalkeepers" dict as itself plus the "row_data" list 
+                    goalkeepers[player_name] = goalkeepers[player_name]+row_data
 
+            #If the table's caption does not pertain to goalkeepers 
+            else :
+
+                #If the player's name is not already in goalkeepers (because goalkeepers appear in the Passing table, for example)
+                if not player_name in goalkeepers :
+
+                    #If the player's name is not already a key in "players" dict
+                    if not player_name in players :
+
+                        #Set the value for "player_name" in the "players" dict as the "row_data" list
+                        players[player_name] = row_data
+
+                    #If the player's name is already in the "players" dict
+                    else :
+
+                        #Set the value for "player_name" in the "players" dict as itself plus the "row_data" list 
+                        players[player_name] = players[player_name]+row_data
 #The "remove_totals" function removes the "Squad Total" and "Opponent Total" in a stats dictionary if they are present    
 def remove_totals(stats) :
 
