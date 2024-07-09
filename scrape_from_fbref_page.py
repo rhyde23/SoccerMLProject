@@ -37,11 +37,13 @@ def get_database_column_names() :
     #The "tables_in_order" list contains the keys of "tables_to_scrape" in the correct order
     tables_in_order = ["Shooting", "Passing", "Goal and Shot Creation", "Defensive Actions", "Possession", "Miscellaneous Stats"]
 
+    #The "gk_tables_in_order" list contains the keys of "goalkeeper_tables_to_scrape" in the correct order 
     gk_tables_in_order = ["Goalkeeping", "Advanced Goalkeeping"]
 
-    #The "sql_names" list will be populated with all the converted names
+    #The "sql_names" list will be populated with all the converted names for non-GK's
     sql_names = []
 
+    #The "gk_sql_names" list will be populated with all the converted names for GK's
     gk_sql_names = []
 
     #Iterate through table name in "tables_in_order"
@@ -50,11 +52,13 @@ def get_database_column_names() :
         #Add the converted names from this table to "sql_names"
         sql_names = sql_names + [convert_string_to_sql_column_name(column_name) for column_name in tables_to_scrape[table]]
 
+    #Iterate through table name in "gk_tables_in_order"
     for table in gk_tables_in_order :
 
+        #Add the converted names from this table to "gk_sql_names"
         gk_sql_names = gk_sql_names + [convert_string_to_sql_column_name(column_name) for column_name in goalkeeper_tables_to_scrape[table]]
 
-    #Return "sql_names"
+    #Return "sql_names" and "gk_sql_names"
     return sql_names, gk_sql_names
 
 #The "ninetys_played_minimum" float is the minimum amount of 90s played for a player to be included in the dataset

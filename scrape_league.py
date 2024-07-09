@@ -25,23 +25,25 @@ def scrape_team(fbref_team_link, transfermarkt_team_link, database_league_name) 
     #Iterate through each key from the "fbref_stats" (player name)
     for fbref_key in fbref_stats :
 
-        #Get the corresponding transfermarkt stats for this player name
-
+        #If the player's name is in the "transfermarkt_stats" dictionary
         if fbref_key in transfermarkt_stats :
-            
+
+            #Get the corresponding transfermarkt stats for this player name
             transfermarkt = transfermarkt_stats[fbref_key]
 
-            
+            #Call the "enter_player_in_database" to enter this player in the league table in the SQL database
             database_management.enter_player_in_database(database_league_name, fbref_key, transfermarkt[0], transfermarkt[1], fbref_stats[fbref_key])
 
+    #Iterate through each key from the "fbref_gk_stats" (player name)
     for fbref_gk_key in fbref_gk_stats :
 
-        #Get the corresponding transfermarkt stats for this player name
-
+        #If the GK player's name is in the "transfermarkt_stats" dictionary
         if fbref_gk_key in transfermarkt_stats :
-            
+
+            #Get the corresponding transfermarkt stats for this GK player name
             transfermarkt = transfermarkt_stats[fbref_gk_key]
-            
+
+            #Call the "enter_player_in_database" to enter this GK player in the GK league table in the SQL database
             database_management.enter_player_in_database(database_league_name+"_GK", fbref_gk_key, transfermarkt[0], transfermarkt[1], fbref_gk_stats[fbref_gk_key])
 
 #The "get_fbref_team_links" function gets all the links to team pages from an FBRef league page.
@@ -77,11 +79,16 @@ def get_transfermarkt_team_links(transfermarkt_link, season_year) :
         #Filter out weird instances and make sure the link isn't already in the list (some repeats)
         if link != "#" :
 
+            #The "link_slash_splitted" list is the link splitted by forward slash
             link_slash_splitted = link.split("/")
 
+            #Build the actual Transfermarkt link for this season 
             link = "/".join(link_slash_splitted[:-5]+["kader", "verein", link_slash_splitted[-3], "plus", "0", "galerie", "0?saison_id="+season_year.split("-")[0]])
-            
+
+            #If the link is not already in "links"
             if not link in links :
+
+                #Add the link to "links"
                 links.append(link)
 
     #Return the "links" list with the last item stripped off because it a link to another part of the league page.
@@ -90,9 +97,13 @@ def get_transfermarkt_team_links(transfermarkt_link, season_year) :
 #The "scrape_league" function is the main function for this script, will iterate through each matching of fbref team link and transfermarkt team link and call "scrape_team"
 def scrape_league(fbref_league_link, transfermarkt_league_link, season_year, official_league_name) :
 
+    #The "database_league_name" is the official league name except underscores replace spaces
     database_league_name = official_league_name.replace(" ", "_")
 
+    #If this database league name does not exist in the SQL Database
     if not database_management.table_exists(database_league_name) :
+
+        #Create the table with this name
         database_management.create_tables(database_league_name)
 
     #Split the Fbref League link by forward slash
@@ -110,6 +121,7 @@ def scrape_league(fbref_league_link, transfermarkt_league_link, season_year, off
         #Wait 5 seconds to avoid the 429 Request Timeout Error from FBRef
         time.sleep(5)
 
+    #Close the connection to the SQL Database by calling the "close_connection" function
     database_management.close_connection()
 
 scrape_league("https://fbref.com/en/comps/9/Premier-League-Stats", "https://www.transfermarkt.com/premier-league/startseite/wettbewerb/GB1", "2023-2024", "Premier League")
