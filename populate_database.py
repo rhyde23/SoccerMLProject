@@ -11,4 +11,10 @@ league_link_pairs = {
 }
 
 def populate() :
-    pass
+    for league_name in league_link_pairs :
+        fbref_league_link, transfermarkt_league_link = league_link_pairs[league_name]
+        scrape_league.scrape_league(fbref_league_link, transfermarkt_league_link, "2023-2024", league_name)
+
+
+
+populate()

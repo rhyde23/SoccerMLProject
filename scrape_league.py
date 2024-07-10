@@ -97,6 +97,9 @@ def get_transfermarkt_team_links(transfermarkt_link, season_year) :
 #The "scrape_league" function is the main function for this script, will iterate through each matching of fbref team link and transfermarkt team link and call "scrape_team"
 def scrape_league(fbref_league_link, transfermarkt_league_link, season_year, official_league_name) :
 
+    #Open the connection to the SQL Database by calling the "open_connection" function
+    database_management.open_connection()
+    
     #The "database_league_name" is the official league name except underscores replace spaces
     database_league_name = official_league_name.replace(" ", "_")
 
@@ -123,5 +126,3 @@ def scrape_league(fbref_league_link, transfermarkt_league_link, season_year, off
 
     #Close the connection to the SQL Database by calling the "close_connection" function
     database_management.close_connection()
-
-scrape_league("https://fbref.com/en/comps/9/Premier-League-Stats", "https://www.transfermarkt.com/premier-league/startseite/wettbewerb/GB1", "2023-2024", "Premier League")

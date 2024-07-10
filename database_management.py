@@ -4,11 +4,20 @@ import sqlite3
 #Import the "get_database_column_names" function from "scrape_from_fbref_page"
 from scrape_from_fbref_page import get_database_column_names
 
-#Connect to the Player Stats Database
-database_connection = sqlite3.connect('PlayerStats.db')
+#The "database_connection" and "cursor" objects will be set to None now to be kept global 
+database_connection, cursor = None, None
 
-#The "cursor" object allows editing of the database
-cursor = database_connection.cursor()
+#The "open_connection" function opens the connection to the SQL database
+def open_connection() :
+
+    #Referencing global variables database_connection and cursor
+    global database_connection, cursor
+    
+    #Connect to the Player Stats Database
+    database_connection = sqlite3.connect('PlayerStats.db')
+
+    #The "cursor" object allows editing of the database
+    cursor = database_connection.cursor()
 
 #The "table_exists" function check if a table name exists in PlayerStats
 def table_exists(table_name) :
