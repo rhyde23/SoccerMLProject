@@ -15,6 +15,7 @@ import sqlite3
 #Import the SimpleImputer class from sklearn to replace all null values with 0
 from sklearn.impute import SimpleImputer
 
+#The "groups_of_similar_positions" groups similar positions in each list
 groups_of_similar_positions = [
     ['Centre-Forward'],
     ['Right Winger', 'Left Midfield', 'Right Midfield', 'Left Winger'],
@@ -25,47 +26,62 @@ groups_of_similar_positions = [
     ['Centre-Back']
 ]
 
-def build_query(group_of_similar_positions) :
-    
-    return "SELECT * FROM "+table_name+" WHERE POSITION == 'Centre-Back' OR POSITION == 'Right-Back'"
+#The "build_query" function builds the query to select only the players from the desired similar position group
+def build_query(table_name, group_of_similar_positions) :
 
+    #Build the conditional part of the query by joining each position in the group with " OR "
+    query_conditional = " OR ".join(["POSITION == \'"+position+"\'" for position in group_of_similar_positions])
 
+    #Return the Select all From part of the query and the table name with the conditional part added on the end
+    return "SELECT * FROM "+table_name+" WHERE "+query_conditional
+
+#The "perform_regressions_on_league" function performs the linear regression on each group of similar positions
 def perform_regressions_on_league(table_name) :
     
     #Connect to the Player Stats Database
     database_connection = sqlite3.connect('PlayerStats.db')
 
-    #Query to select all data from a given table
-    query = "SELECT * FROM "+table_name#+" WHERE POSITION == 'Centre-Back' OR POSITION == 'Right-Back'"
+    #Iterate through each similar position group to perform the regression.
+    for group_of_similar_positions in groups_of_similar_positions :
 
-    #Read the SQL table and store into "player_data" using pandas' function read_sql
-    player_data = pd.read_sql(query, database_connection)
+        #Query to select all data from a given table
+        query = build_query(table_name, group_of_similar_positions)
 
-    #Filter by
+        #Read the SQL table and store into "player_data" using pandas' function read_sql
+        player_data = pd.read_sql(query, database_connection)
 
-    print(player_data["POSITION"].unique())
-    #quit()
-    
-    #filtered_by_position = player_data.query("POSITION == 'Centre-Back' OR POSITION == 'Right-Back' ")
-    """
-    print(player_data)
-    quit()
-    
-    X = filtered_by_position[list(filtered_by_position)[3:]]
-    y = filtered_by_position[['MARKET_VALUE']]
+        #Set the input data as every column except for name, position, and marke value
+        X = player_data[list(player_data)[3:]]
 
-    imputer = SimpleImputer(strategy='constant', fill_value=0)
-    X = imputer.fit_transform(X)
+        #Set the output data as market value
+        y = player_data[['MARKET_VALUE']]
 
-    linear_regression = LinearRegression(fit_intercept = True)
-    linear_regression.fit(X, y)
+        #Get rid of all null values and replace with 0
+        imputer = SimpleImputer(strategy='constant', fill_value=0)
+        X = imputer.fit_transform(X)
 
-    prediction = linear.predict(X)
+        #Create the "linear_regression" object
+        linear_regression = LinearRegression(fit_intercept = True)
 
-    filtered_by_position["PREDICTED_PRICE"] = prediction
-    filtered_by_position["DIFFERENCE"] = filtered_by_position["PREDICTED_PRICE"]-filtered_by_position["MARKET_VALUE"]
+        #Fit the refression line to the data
+        linear_regression.fit(X, y)
 
-    sorted_by_difference = filtered_by_position.sort_values(["DIFFERENCE"])
-    print(sorted_by_difference[['NAME', 'DIFFERENCE']].tail(5))
-    """
+        #Make the predicted prices using the fit linear regression
+        prediction = linear_regression.predict(X)
+
+        #Store these predicted prices in "PREDICTED_PRICE"
+        player_data["PREDICTED_PRICE"] = prediction
+
+        #Store the ratio of each player's predicted price divided by their real market value in "DIFFERENCE_PERCENTAGE"
+        player_data["DIFFERENCE_PERCENTAGE"] = player_data["PREDICTED_PRICE"]/player_data["MARKET_VALUE"]
+
+        #Sort the player data by this difference percentage
+        sorted_by_difference = player_data.sort_values(["DIFFERENCE_PERCENTAGE"])
+
+        #Print the 10 most undervalued players in this position group for this league
+        print(sorted_by_difference[['NAME', 'DIFFERENCE_PERCENTAGE']].tail(10))
+        
+        print()
+        print()
+        print()
 
